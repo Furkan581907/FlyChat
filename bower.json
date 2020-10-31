@@ -1,0 +1,15 @@
+{
+  "name": "flychat",
+  "description": "",
+  "main": "",
+  "license": "MIT",
+  "keywords": [
+    "FlyChat",
+    "nodejs",
+    "chat"
+  ],
+  "homepage": "https://github.com/Furkan581907/FlyChat",
+  "dependencies": {
+    "angular": "^1.8.2"
+  }
+}
