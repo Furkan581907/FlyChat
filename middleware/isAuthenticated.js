@@ -8,15 +8,11 @@
  * Created Date : 2020.
  *
  */
-const express = require('express');
-const router = express.Router();
 
-/* GET home page. */
-router.get('/', (req, res, next) => {
-  if(!req.user)
-    res.render('index', { title: 'Express' });
-  else
-    res.redirect('/chat');
-});
-
-module.exports = router;
+function isAuthenticated(req,res,next){
+    if(req.isAuthenticated())
+        next();
+    else
+        res.redirect('/');
+}
+module.exports=isAuthenticated;
