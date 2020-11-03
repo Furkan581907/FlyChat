@@ -9,7 +9,18 @@
  *
  */
 
-app.controller('chatController',['$scope',($scope)=>{
+app.controller('chatController',['$scope','chatFactory','userFactory',($scope,chatFactory,userFactory)=>{
+
+    /**
+     * initialization
+     */
+
+    function init(){
+        userFactory.getUser().then(user => {
+            $scope.user=user;
+        })
+    }
+init();
 
     /**
      * Angular veriables
@@ -18,9 +29,13 @@ app.controller('chatController',['$scope',($scope)=>{
     $scope.roomList = [];
     $scope.activeTab = 1;
     $scope.chatClicked = false;
+    $scope.loadingMessages = false;
     $scope.chatName = "";
     $scope.roomId = "";
     $scope.message = "";
+    $scope.messages = [];
+    $scope.user = {};
+
 
     /**
      * Socket.io event handling
@@ -37,19 +52,52 @@ app.controller('chatController',['$scope',($scope)=>{
         $scope.$apply();
     })
 
+    socket.on('receiveMessage',message => {
+        $scope.messages[message.roomId].push({
+            message:message.message,
+            userId:message.userId,
+            username:message.username,
+            surname:message.surname,
+        });
+        $scope.$apply();
+        console.log(message);
+    })
+
     $scope.newMessage = () => {
-        console.log($scope.message);
-        socket.emit('newMessage',{
-            message:$scope.message,
-            roomId:$scope.roomId
-        })
-        $scope.message = "";
+        if($scope.message.trim()!=='')
+        {
+            socket.emit('newMessage',{
+                message:$scope.message,
+                roomId:$scope.roomId
+            })
+            console.log($scope.user.name);
+
+            $scope.messages[$scope.roomId].push({
+                message:$scope.message,
+                userId:$scope.user._id,
+                username:$scope.user.name,
+                surname:$scope.user.surname,
+            });
+
+            $scope.message = "";
+        }
+
     }
 
     $scope.switchRoom = room => {
         $scope.chatName = room.name;
         $scope.chatClicked = true;
         $scope.roomId = room.id;
+        if(!$scope.messages.hasOwnProperty(room.id))
+        {
+            $scope.loadingMessages=true;
+            chatFactory.getMessages(room.id).then(data => {
+                console.log(data);
+                $scope.messages[room.id] = data;
+                $scope.loadingMessages=false;
+            })
+        }
+
     }
 
     $scope.newRoom = () => {
