@@ -18,6 +18,7 @@ const socketApi = {io};
 //libs
 const users = require('../src/lib/Users');
 const rooms = require('../src/lib/Rooms');
+const Messages = require('../src/lib/Messages');
 
 
 // socket authorization middleware
@@ -39,11 +40,24 @@ io.on('connection',socket => {
     })
 
     rooms.list(room =>{
-        console.log(room)
+        io.emit('roomList',room);
     })
-    
+
+    socket.on('newMessage',data => {
+        console.log(data);
+        Messages.upsert({
+            ...data,
+            username:socket.request.user.name,
+            surname:socket.request.user.surname,
+        });
+
+    })
+
     socket.on('newRoom',roomName => {
         rooms.upsert(roomName);
+        rooms.list(room =>{
+            io.emit('roomList',room);
+        })
     })
     socket.on('disconnect', () => {
         users.remove(socket.request.user.googleId)

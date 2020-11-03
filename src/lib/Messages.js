@@ -11,21 +11,21 @@
 
 const redisClient = require('../redisClient');
 const shortId = require('shortid');
-function Rooms(){
+const _ = require('lodash');
+function Messages(){
     this.client = redisClient.getClient;
 }
 
-module.exports = new Rooms();
+module.exports = new Messages();
 
-Rooms.prototype.upsert = function (name) {
-    console.log(name);
-    const newId = shortId.generate()
+Messages.prototype.upsert = function ({roomId,message,username,surname}) {
   this.client.hset(
-      'rooms',
-      '@Room:'+newId,
+      'messages:'+roomId,
+      shortId.generate(),
       JSON.stringify({
-          id:'@Room:'+newId,
-          name,
+          username,
+          surname,
+          message,
           when:Date.now()
       }),
       err =>{
@@ -34,19 +34,18 @@ Rooms.prototype.upsert = function (name) {
       }
   )
 };
-
-Rooms.prototype.list = function (callback){
-    let roomList = [];
-    this.client.hgetall('rooms',function (err,rooms) {
+Messages.prototype.list = function (roomId,callback){
+    let messageList = [];
+    this.client.hgetall('messages:'+roomId,function (err,messages) {
         if(err) {
             console.log(err);
             return callback([]);
         }
-        for(let room in rooms)
+        for(let message in messages)
         {
-            roomList.push(JSON.parse(rooms[room]))
+            messageList.push(JSON.parse(messages[message]))
         }
-        return callback(roomList)
+        return callback(_.orderBy(messageList,'when','asc'))
 
     })
 }
